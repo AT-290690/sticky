@@ -226,7 +226,6 @@ export default function CodeEditor(props) {
   //   }, [monaco]); // runs once when monaco becomes available
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
-    console.log(monaco.__init);
     if (monaco.__init === true) return;
     // defineTheme is idempotent but avoid re-defining unnecessarily
     try {
@@ -259,6 +258,7 @@ export default function CodeEditor(props) {
           return { suggestions: suggestions };
         },
       });
+      monaco.__init = true;
     } catch (e) {
       // ignore if it's already defined (optional)
     }
