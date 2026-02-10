@@ -7,6 +7,7 @@ import MarkDown from "react-markdown";
 export interface Note {
   id: string;
   input: string;
+  title: string;
   code: string;
   color: string;
   position: { x: number; y: number };
@@ -34,6 +35,7 @@ export function StickyNote({
   pan,
 }: StickyNoteProps) {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [localTitle, setLocalTitle] = useState(note.title);
   const [localInput, setLocalInput] = useState(note.input);
   const [localCode, setLocalCode] = useState(note.code);
   const [isDragging, setIsDragging] = useState(false);
@@ -41,6 +43,7 @@ export function StickyNote({
   const dragStartNotePos = useRef({ x: 0, y: 0 });
 
   const handleEditClick = () => {
+    setLocalTitle(note.title);
     setLocalInput(note.input);
     setLocalCode(note.code);
     setIsEditMode(true);
@@ -54,14 +57,16 @@ export function StickyNote({
   };
   const handleSave = () => {
     onUpdate(note.id, {
+      title: localTitle,
       input: localInput,
       code: localCode,
     });
-    onSave({ ...note, input: localInput, code: localCode });
+    onSave({ ...note, title: localTitle, input: localInput, code: localCode });
     setIsEditMode(false);
   };
 
   const handleCancel = () => {
+    setLocalTitle(note.title);
     setLocalInput(note.input);
     setLocalCode(note.code);
     setIsEditMode(false);
@@ -109,7 +114,6 @@ export function StickyNote({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, note.id, onDragEnd]);
-
   return (
     <div
       style={{
@@ -120,10 +124,11 @@ export function StickyNote({
         zIndex: isDragging ? 1000 : isEditMode ? 999 : 1,
       }}
       onMouseDown={handleMouseDown}
-      className="touch-none"
+      className="text-slate-300 touch-none"
     >
       {!isEditMode ? (
-        <div className={`${note.color} shadow-lg p-6 w-72 relative`}>
+        <div className={`${note.color} shadow-lg p-6 w-100 relative`}>
+          <h1 className="mb-4">{note.title}</h1>
           {/* Input area - non-editable in view mode */}
           <div className="mb-4">
             <div
@@ -196,30 +201,39 @@ export function StickyNote({
       ) : (
         <div className={`${note.color} shadow-2xl p-6 w-100 relative`}>
           {/* Action buttons */}
-          <div className="mb-4 flex gap-2 justify-start">
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors flex items-center gap-2"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors flex items-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-            </button>
+          <div className="flex justify-evenly">
+            <input
+              className="mb-4"
+              spellCheck={false}
+              defaultValue={localTitle}
+              onChange={(e) => setLocalTitle(e.target.value)}
+            />
+
+            <div className="mb-4 flex gap-2 justify-end">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-colors flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           {/* Input section */}
 
           <div className="mb-4">
-            <label className="block text-xs font-medium mb-2 uppercase tracking-wide">
+            {/* <label className="block text-xs font-medium mb-2 uppercase tracking-wide">
               Input
-            </label>
+            </label> */}
             <textarea
               value={localInput}
               onChange={(e) => setLocalInput(e.target.value)}
-              className="w-full bg-white/10 rounded-lg border border-white/20 p-3 outline-none resize-none focus:border-white/40"
+              className="w-full bg-white/10 border border-white/20 p-3 outline-none resize-none focus:border-white/40"
               placeholder="Enter your data..."
               rows={3}
               style={{ fontSize: "14px" }}
@@ -228,9 +242,9 @@ export function StickyNote({
 
           {/* Code editor */}
           <div className="mb-4">
-            <label className="block text-xs font-medium mb-2 uppercase tracking-wide">
+            {/* <label className="text-whit block text-xs font-medium mb-2 uppercase tracking-wide">
               Code
-            </label>
+            </label> */}
 
             <CodeEditor
               initial={localCode}

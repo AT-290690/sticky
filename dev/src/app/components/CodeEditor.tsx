@@ -1,43 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
-import Editor, { useMonaco } from "@monaco-editor/react";
+import React, { useState, useRef } from "react";
+import Editor from "@monaco-editor/react";
 import { Button } from "../components/ui/button.js";
 import theme from "../theme.js";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../components/ui/dialog.js";
-import { Input } from "../components/ui/input.js";
-import { ScrollArea } from "../components/ui/scroll-area.js";
-import {
-  Play,
-  BookOpen,
-  Regex,
-  Zap,
-  Type,
-  BugIcon,
-  BugOff,
-  Link,
-  Pause,
-  Copy,
-  Check,
-  Trash2,
-  Sparkles,
-} from "lucide-react";
+import {} from "../components/ui/dialog.js";
+import { Play } from "lucide-react";
 import init, {
   //   exec,
   //   comp,
   //   cons,
   // run,
   evaluate,
-  check,
-  js,
   get_output_len,
 } from "../pkg/web/fez_rs.js";
 import { standardLibrary } from "../standardLibrary.js";
 import { Que, QueConf } from "../que.js";
-import { Toggle } from "@radix-ui/react-toggle";
 // @ts-ignore
 let wasm;
 init().then((w) => (wasm = w));
@@ -70,8 +46,8 @@ const charCodeToChar = (code) => `'${String.fromCharCode(code)}'`;
 const readWasmString = (ptr, len) =>
   new TextDecoder().decode(new Uint8Array(wasm.memory.buffer, ptr, len));
 // Use these
-const typeCheck = (program) => readWasmString(check(program), get_output_len());
-const compileJs = (program) => readWasmString(js(program), get_output_len());
+// const typeCheck = (program) => readWasmString(check(program), get_output_len());
+// const compileJs = (program) => readWasmString(js(program), get_output_len());
 // const compileBiteCode = (program) =>
 //   readWasmString(comp(program), get_output_len());
 // const execBiteCode = (program) =>
@@ -106,29 +82,29 @@ const compile = (value: string) => {
     return { err: null, typ: formatType(typ), res };
   }
 };
-const fastCompile = (value: string) => {
-  try {
-    const comp = compileJs(value);
-    if (comp.includes("return var ")) {
-      return {
-        err: null,
-        typ: "()",
-        res: 0,
-      };
-    }
-    return {
-      err: null,
-      typ: "()",
-      res: new Function(`return ${compileJs(value)}`)(),
-    };
-  } catch (err) {
-    return {
-      err: `Something went horribly wrong executing JavaScript!\n${err}`,
-      typ: "()",
-      res: null,
-    };
-  }
-};
+// const fastCompile = (value: string) => {
+//   try {
+//     const comp = compileJs(value);
+//     if (comp.includes("return var ")) {
+//       return {
+//         err: null,
+//         typ: "()",
+//         res: 0,
+//       };
+//     }
+//     return {
+//       err: null,
+//       typ: "()",
+//       res: new Function(`return ${compileJs(value)}`)(),
+//     };
+//   } catch (err) {
+//     return {
+//       err: `Something went horribly wrong executing JavaScript!\n${err}`,
+//       typ: "()",
+//       res: null,
+//     };
+//   }
+// };
 
 interface TerminalLine {
   type: "output" | "error";
@@ -228,29 +204,7 @@ export default function CodeEditor(props) {
   const input = `(let INPUT "${props.input}")`;
   const setCode = props.setCode;
   const editorRef = useRef<any>(null);
-  const displayButtons = props.tools
-    ? props.tools.split("").reduce(
-        (a, b) => {
-          a[b] = true;
-          return a;
-        },
-        {
-          p: false,
-          c: false,
-          j: false,
-          m: false,
-          u: false,
-          d: false,
-        }
-      )
-    : {
-        p: true,
-        c: true,
-        j: true,
-        m: true,
-        u: true,
-        d: true,
-      };
+
   // if (!monaco) return;
   //   const [editor, setEditor] = useState(null);
   // const editorRef = useRef(null);
@@ -273,41 +227,43 @@ export default function CodeEditor(props) {
   //   }, [monaco]); // runs once when monaco becomes available
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
-    const themeName = "my";
+    console.log(monaco.__init);
+    if (monaco.__init === true) return;
     // defineTheme is idempotent but avoid re-defining unnecessarily
     try {
+      const themeName = "my";
       monaco.editor.defineTheme(themeName, theme["dark"] as any);
+      monaco.editor.setTheme(themeName);
+      // Register a new language
+      monaco.languages.register({ id: "que" });
+      // Register a tokens provider for the language
+      monaco.languages.setMonarchTokensProvider("que", Que as any);
+      monaco.languages.setLanguageConfiguration("que", QueConf as any);
+      monaco.languages.registerCompletionItemProvider("que", {
+        provideCompletionItems: (model, position) => {
+          const word = model.getWordUntilPosition(position);
+          const range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word.startColumn,
+            endColumn: word.endColumn,
+          };
+          const suggestions = standardLibrary.map(({ name, signature }) => ({
+            label: name,
+            kind: monaco.languages.CompletionItemKind.Function,
+            // documentation: signature,
+            detail: signature,
+            insertText: name,
+            range: range,
+          }));
+
+          return { suggestions: suggestions };
+        },
+      });
     } catch (e) {
       // ignore if it's already defined (optional)
     }
-    monaco.editor.setTheme(themeName);
-    // Register a new language
-    monaco.languages.register({ id: "que" });
 
-    // Register a tokens provider for the language
-    monaco.languages.setMonarchTokensProvider("que", Que as any);
-    monaco.languages.setLanguageConfiguration("que", QueConf as any);
-    monaco.languages.registerCompletionItemProvider("que", {
-      provideCompletionItems: (model, position) => {
-        const word = model.getWordUntilPosition(position);
-        const range = {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: word.startColumn,
-          endColumn: word.endColumn,
-        };
-        const suggestions = standardLibrary.map(({ name, signature }) => ({
-          label: name,
-          kind: monaco.languages.CompletionItemKind.Function,
-          // documentation: signature,
-          detail: signature,
-          insertText: name,
-          range: range,
-        }));
-
-        return { suggestions: suggestions };
-      },
-    });
     // completionProvider.dispose();
   };
   const handleRun = (source: string = "") => {
@@ -344,34 +300,34 @@ export default function CodeEditor(props) {
       setTypeInfo(formatType(typ));
     }
   };
-  const handleFastRun = (source: string = "") => {
-    const { err, res } = fastCompile(source);
-    setTypeInfo("()");
-    if (err != null) {
-      return setTerminalLines({ type: "error", content: err });
-    }
-    setTerminalLines({
-      type: "output",
-      content: serialise(res),
-    });
-  };
+  // const handleFastRun = (source: string = "") => {
+  //   const { err, res } = fastCompile(source);
+  //   setTypeInfo("()");
+  //   if (err != null) {
+  //     return setTerminalLines({ type: "error", content: err });
+  //   }
+  //   setTerminalLines({
+  //     type: "output",
+  //     content: serialise(res),
+  //   });
+  // };
 
-  // Keyboard shortcut: Ctrl/Cmd+S to run code
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleRun(editorRef.current.getValue());
-      }
-    };
+  // // Keyboard shortcut: Ctrl/Cmd+S to run code
+  // useEffect(() => {
+  //   const handleKeyDown = (e: KeyboardEvent) => {
+  //     if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey)) {
+  //       e.preventDefault();
+  //       e.stopPropagation();
+  //       handleRun(editorRef.current.getValue());
+  //     }
+  //   };
 
-    document.addEventListener("keydown", handleKeyDown);
+  //   document.addEventListener("keydown", handleKeyDown);
 
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleRun, handleFastRun]);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [handleRun, handleFastRun]);
 
   // const getCursorPosition = () => {
   //   const pos = editor?.getPosition(); // { lineNumber, column } or null
@@ -383,7 +339,7 @@ export default function CodeEditor(props) {
   // };
 
   return (
-    <div className="flex flex-col h-[300px] bg-slate-950">
+    <div className="flex flex-col h-[300px] bg-slate-950 border border-white/40">
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Code Editor Section */}
         <div className="flex-1 flex flex-col min-h-0">
@@ -421,7 +377,7 @@ export default function CodeEditor(props) {
         </div>
 
         {/* Terminal Section */}
-        <div className="h-32 flex flex-col bg-slate-950 border-t border-slate-800">
+        <div className="h-25 flex flex-col bg-slate-950 border-t border-slate-800">
           <div className="flex items-center justify-between px-6 py-2 bg-slate-950 border-b border-slate-800">
             {/* <span className="text-slate-400 text-sm">
               Terminal
@@ -429,10 +385,11 @@ export default function CodeEditor(props) {
             {/* Type Display */}
             <textarea
               value={typeInfo}
-              className="text-emerald-400 rounded text-sm"
+              className="h-3 text-emerald-400 text-sm"
               style={{
                 resize: "none",
                 width: "100%",
+                fontSize: "10px",
                 fontFamily: '"JetBrains Mono", monospace',
               }}
             ></textarea>
@@ -447,15 +404,13 @@ export default function CodeEditor(props) {
                 </Button>
               )} */}
 
-              {displayButtons.p && (
-                <Button
-                  onClick={() => handleRun(editorRef.current.getValue())}
-                  className="bg-emerald-600 hover:bg-slate-700 text-white cursor-pointer"
-                >
-                  <Play className="w-4 h-4 mr-1 " />
-                  {/* Run */}
-                </Button>
-              )}
+              <Button
+                onClick={() => handleRun(editorRef.current.getValue())}
+                className="bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white cursor-pointer"
+              >
+                <Play className="w-4 h-4" />
+                {/* Run */}
+              </Button>
             </div>
           </div>
           {/* <ScrollArea className="flex-1 px-6 py-2"> */}
@@ -465,7 +420,7 @@ export default function CodeEditor(props) {
           >
             <textarea
               value={terminalLines.content}
-              style={{ resize: "none", width: "100%" }}
+              style={{ fontSize: "10px", resize: "none", width: "100%" }}
               className={
                 terminalLines.type === "error"
                   ? "text-red-400"

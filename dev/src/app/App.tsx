@@ -11,9 +11,9 @@ const COLORS = [
   "bg-purple-600",
   "bg-orange-600",
 ];
-
+const DEFAULT_COLOR = "bg-slate-800";
 function App() {
-  const [zoom, setZoom] = useState(1);
+  // const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStartPos = useRef({ x: 0, y: 0 });
@@ -22,8 +22,8 @@ function App() {
   const [notes, setNotes] = useState<Note[]>([
     {
       id: "0",
-      input: `# Welcome!
-_This is your first programmable sticky note._
+      title: "Welcome",
+      input: `_This is your first programmable sticky note._
 
 Add more notes with the **+** button in the bottom right.
 **Edit**, **copy**, or **delete** any note.
@@ -47,7 +47,7 @@ Here are some numbers:
   (String->Vector ' ') ; split  by spaces
   (map String->Integer) ; convert to integers
   sum) ; sum them up`,
-      color: "bg-yellow-600",
+      color: DEFAULT_COLOR,
       position: { x: 50, y: 50 },
     },
   ]);
@@ -116,9 +116,11 @@ Here are some numbers:
   };
 
   const handleCreateNote = () => {
-    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    // const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const randomColor = DEFAULT_COLOR;
     const newNote: Note = {
       id: Date.now().toString(),
+      title: "Untitled",
       input: "",
       code: "INPUT",
       color: randomColor,
@@ -193,7 +195,7 @@ Here are some numbers:
         >
           <div
             style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transform: `translate(${pan.x}px, ${pan.y}px))`,
               transformOrigin: "0 0",
               width: "100%",
               height: "100%",
