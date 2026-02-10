@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { StickyNote, Note } from "./components/StickyNote";
 import { Plus } from "lucide-react";
 import LZString from "lz-string";
-
+// const LZString = {
+//   decompressFromBase64: () => "",
+//   compressToBase64: () => "",
+// };
 const COLORS = [
   "bg-yellow-600",
   "bg-blue-600",
@@ -18,6 +21,7 @@ function App() {
   const [isPanning, setIsPanning] = useState(false);
   const panStartPos = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [notes, setNotes] = useState<Note[]>([
     {
@@ -62,6 +66,19 @@ Here are some numbers:
     }
     if (stored.length) setNotes(stored);
   }, []);
+
+  // Detect mobile/tablet
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const handleSave = (note) =>
     localStorage.setItem(
       `sticky-${note.id}`,
@@ -182,26 +199,10 @@ Here are some numbers:
       </button> */}
 
       {/* Notes Board */}
-      <div className="relative" style={{ minHeight: "100vh" }}>
-        <div
-          ref={canvasRef}
-          onMouseDown={handleCanvasMouseDown}
-          className="relative"
-          style={{
-            width: "100%",
-            height: "calc(100vh - 160px)",
-            cursor: isPanning ? "grabbing" : "grab",
-          }}
-        >
-          <div
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px))`,
-              transformOrigin: "0 0",
-              width: "100%",
-              height: "100%",
-              position: "relative",
-            }}
-          >
+      {isMobile ? (
+        // Mobile/Tablet: Vertical scrollable grid
+        <div className="min-h-screen overflow-y-auto pb-24">
+          <div className="grid grid-cols-1 gap-6 p-6 max-w-7xl mx-auto">
             {notes.map((note) => (
               <StickyNote
                 key={note.id}
@@ -213,19 +214,59 @@ Here are some numbers:
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 pan={pan}
+                isMobile={isMobile}
               />
             ))}
           </div>
         </div>
-      </div>
+      ) : (
+        // Desktop: Infinite canvas
+        <div className="relative" style={{ minHeight: "100vh" }}>
+          <div
+            ref={canvasRef}
+            onMouseDown={handleCanvasMouseDown}
+            className="relative"
+            style={{
+              width: "100%",
+              height: "calc(100vh - 160px)",
+              cursor: isPanning ? "grabbing" : "grab",
+            }}
+          >
+            <div
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px))`,
+                transformOrigin: "0 0",
+                width: "100%",
+                height: "100%",
+                position: "relative",
+              }}
+            >
+              {notes.map((note) => (
+                <StickyNote
+                  key={note.id}
+                  note={note}
+                  onUpdate={handleUpdate}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  pan={pan}
+                  isMobile={isMobile}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Create Button */}
       <button
         onClick={handleCreateNote}
-        className="fixed bottom-8 right-8 p-4 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-gray-100 shadow-2xl transition-all hover:scale-110 z-50"
+        className="fixed bottom-8 right-8 p-4 rounded-full bg-indigo-600 hover:bg-indigo-600 text-white shadow-2xl transition-all hover:scale-110 z-50"
         title="Create new note"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-8 h-8" />
       </button>
     </div>
   );

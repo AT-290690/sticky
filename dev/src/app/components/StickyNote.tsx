@@ -3,7 +3,6 @@ import { Pencil, Copy, Trash2, Check, X, Share2 } from "lucide-react";
 import CodeEditor from "./CodeEditor";
 import LZString from "lz-string";
 import MarkDown from "react-markdown";
-
 export interface Note {
   id: string;
   input: string;
@@ -22,6 +21,7 @@ interface StickyNoteProps {
   onDragStart: (id: string) => void;
   onDragEnd: (id: string, position: { x: number; y: number }) => void;
   pan: { x: number; y: number };
+  isMobile: boolean;
 }
 
 export function StickyNote({
@@ -32,7 +32,7 @@ export function StickyNote({
   onDuplicate,
   onDragStart,
   onDragEnd,
-  pan,
+  isMobile,
 }: StickyNoteProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [localTitle, setLocalTitle] = useState(note.title);
@@ -61,7 +61,12 @@ export function StickyNote({
       input: localInput,
       code: localCode,
     });
-    onSave({ ...note, title: localTitle, input: localInput, code: localCode });
+    onSave({
+      ...note,
+      title: localTitle,
+      input: localInput,
+      code: localCode,
+    });
     setIsEditMode(false);
   };
 
@@ -73,6 +78,7 @@ export function StickyNote({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return; // Disable dragging on mobile
     if (isEditMode) return;
     if ((e.target as HTMLElement).closest("button")) return;
 
@@ -116,21 +122,29 @@ export function StickyNote({
   }, [isDragging, note.id, onDragEnd]);
   return (
     <div
-      style={{
-        position: "absolute",
-        left: note.position.x,
-        top: note.position.y,
-        cursor: isEditMode ? "default" : isDragging ? "grabbing" : "grab",
-        zIndex: isDragging ? 1000 : isEditMode ? 999 : 1,
-      }}
+      style={
+        isMobile
+          ? {
+              // Mobile: Static positioning in grid
+              position: "relative",
+            }
+          : {
+              // Desktop: Absolute positioning for canvas
+              position: "absolute",
+              left: note.position.x,
+              top: note.position.y,
+              cursor: isEditMode ? "default" : isDragging ? "grabbing" : "grab",
+              zIndex: isDragging ? 1000 : isEditMode ? 999 : 1,
+            }
+      }
       onMouseDown={handleMouseDown}
-      className="text-slate-300 touch-none border border-white/30"
+      className={`${note.color} w-90 shadow-lg text-slate-300 touch-none border border-white/30`}
     >
       {!isEditMode ? (
-        <div className={`${note.color} shadow-lg p-6 w-100 relative`}>
+        <div className={`p-6 w-90 relative`}>
           {/* Input area - non-editable in view mode */}
           <div className="mb-4">
-            <h1 className="w-90 mb-4 text-ellipsis whitespace-no-wrap overflow-hidden select-none">
+            <h1 className="mb-4 text-ellipsis whitespace-no-wrap overflow-hidden select-none">
               {note.title}
             </h1>
 
@@ -143,7 +157,7 @@ export function StickyNote({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/20 mb-4"></div>
+          <div className="mb-4"></div>
 
           {/* Output preview */}
           <div className="mb-8">
@@ -202,7 +216,7 @@ export function StickyNote({
           </div>
         </div>
       ) : (
-        <div className={`${note.color} shadow-2xl p-6 w-100 relative`}>
+        <div className={`${note.color} shadow-2xl p-6 w-90 relative`}>
           {/* Action buttons */}
           <div className="flex justify-evenly">
             <input
@@ -238,7 +252,7 @@ export function StickyNote({
               onChange={(e) => setLocalInput(e.target.value)}
               className="w-full bg-white/10 border border-white/20 p-3 outline-none focus:border-white/40"
               placeholder="Enter your data..."
-              rows={3}
+              rows={5}
               style={{ fontSize: "14px" }}
             />
           </div>
