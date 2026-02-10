@@ -124,13 +124,16 @@ export function StickyNote({
         zIndex: isDragging ? 1000 : isEditMode ? 999 : 1,
       }}
       onMouseDown={handleMouseDown}
-      className="text-slate-300 touch-none"
+      className="text-slate-300 touch-none border border-white/30"
     >
       {!isEditMode ? (
         <div className={`${note.color} shadow-lg p-6 w-100 relative`}>
-          <h1 className="mb-4">{note.title}</h1>
           {/* Input area - non-editable in view mode */}
           <div className="mb-4">
+            <h1 className="w-90 mb-4 text-ellipsis whitespace-no-wrap overflow-hidden select-none">
+              {note.title}
+            </h1>
+
             <div
               className="w-full whitespace-pre-wrap select-none"
               style={{ fontSize: "15px", lineHeight: "1.5" }}
