@@ -24,5 +24,4 @@ Gym: $100
 
 (cons "$" (Integer->String EXPENSES))
 ```
-
-<img width="415" height="582" alt="Screenshot 2026-02-10 at 12 33 31" src="https://github.com/user-attachments/assets/5328d53a-6278-431b-82f5-3d63532f0901" />
+<img width="381" height="587" alt="Screenshot 2026-02-10 at 17 04 05" src="https://github.com/user-attachments/assets/c63df28a-f9fb-453b-8bc6-d492a9c80b07" />
