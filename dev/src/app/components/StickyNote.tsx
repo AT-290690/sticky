@@ -233,7 +233,7 @@ export function StickyNote({
             <textarea
               value={localInput}
               onChange={(e) => setLocalInput(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 p-3 outline-none resize-none focus:border-white/40"
+              className="w-full bg-white/10 border border-white/20 p-3 outline-none focus:border-white/40"
               placeholder="Enter your data..."
               rows={3}
               style={{ fontSize: "14px" }}
