@@ -138,18 +138,18 @@ export function StickyNote({
             }
       }
       onMouseDown={handleMouseDown}
-      className={`${note.color} w-90 shadow-lg text-slate-300 touch-none border border-white/30`}
+      className={`${note.color} w-90 shadow-lg text-slate-300 touch-none select-none`}
     >
       {!isEditMode ? (
         <div className={`p-6 w-90 relative`}>
           {/* Input area - non-editable in view mode */}
           <div className="mb-4">
-            <h1 className="mb-4 text-ellipsis whitespace-no-wrap overflow-hidden select-none">
+            <h1 className="mb-4 text-ellipsis whitespace-no-wrap overflow-hidden">
               {note.title}
             </h1>
 
             <div
-              className="w-full whitespace-pre-wrap select-none"
+              className="w-full whitespace-pre-wrap"
               style={{ fontSize: "15px", lineHeight: "1.5" }}
             >
               <MarkDown>{note.input || ""}</MarkDown>
@@ -162,7 +162,7 @@ export function StickyNote({
           {/* Output preview */}
           <div className="mb-8">
             {/* <div
-              className="font-medium whitespace-pre-wrap select-none"
+              className="font-medium whitespace-pre-wrap"
               style={{ fontSize: "15px", lineHeight: "1.5" }}
             >
               {<span>No output yet</span>}

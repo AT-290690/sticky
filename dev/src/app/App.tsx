@@ -202,7 +202,7 @@ Here are some numbers:
       {isMobile ? (
         // Mobile/Tablet: Vertical scrollable grid
         <div className="min-h-screen overflow-y-auto pb-24">
-          <div className="grid grid-cols-1 gap-6 p-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 gap-6 p-6 max-w-7xl mx-auto border">
             {notes.map((note) => (
               <StickyNote
                 key={note.id}
