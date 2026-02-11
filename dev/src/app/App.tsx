@@ -17,9 +17,6 @@ const COLORS = [
 const DEFAULT_COLOR = "bg-slate-800";
 function App() {
   // const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const panStartPos = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -142,51 +139,16 @@ Here are some numbers:
       code: "INPUT",
       color: randomColor,
       position: {
-        x: 50 + Math.random() * 300 - pan.x,
-        y: 50 + Math.random() * 200 - pan.y,
+        x: 50 + Math.random() * 300,
+        y: 50 + Math.random() * 200,
       },
     };
     setNotes((prev) => [...prev, newNote]);
     handleSave(newNote);
   };
 
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    // Only pan if clicking on the canvas background, not on notes
-    if (e.target === canvasRef.current) {
-      setIsPanning(true);
-      panStartPos.current = {
-        x: e.clientX - pan.x,
-        y: e.clientY - pan.y,
-      };
-    }
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isPanning) {
-        const newX = e.clientX - panStartPos.current.x;
-        const newY = e.clientY - panStartPos.current.y;
-        setPan({ x: newX, y: newY });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsPanning(false);
-    };
-
-    if (isPanning) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isPanning]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 overflow-hidden">
+    <div className="min-h-screen">
       {/* Share button - Top Left */}
       {/* <button
         onClick={() => {
@@ -213,7 +175,6 @@ Here are some numbers:
                 onDuplicate={handleDuplicate}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
-                pan={pan}
                 isMobile={isMobile}
               />
             ))}
@@ -224,17 +185,15 @@ Here are some numbers:
         <div className="relative" style={{ minHeight: "100vh" }}>
           <div
             ref={canvasRef}
-            onMouseDown={handleCanvasMouseDown}
             className="relative"
             style={{
               width: "100%",
               height: "calc(100vh - 160px)",
-              cursor: isPanning ? "grabbing" : "grab",
+              cursor: "grab",
             }}
           >
             <div
               style={{
-                transform: `translate(${pan.x}px, ${pan.y}px))`,
                 transformOrigin: "0 0",
                 width: "100%",
                 height: "100%",
@@ -251,7 +210,6 @@ Here are some numbers:
                   onDuplicate={handleDuplicate}
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
-                  pan={pan}
                   isMobile={isMobile}
                 />
               ))}

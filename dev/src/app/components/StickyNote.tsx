@@ -20,7 +20,6 @@ interface StickyNoteProps {
   onDuplicate: (id: string) => void;
   onDragStart: (id: string) => void;
   onDragEnd: (id: string, position: { x: number; y: number }) => void;
-  pan: { x: number; y: number };
   isMobile: boolean;
 }
 
